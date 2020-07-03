@@ -30,6 +30,12 @@ _C.TASK.VLN_ORACLE_ACTION_SENSOR.GOAL_RADIUS = 0.5
 _C.TASK.VLN_ORACLE_PROGRESS_SENSOR = Config()
 _C.TASK.VLN_ORACLE_PROGRESS_SENSOR.TYPE = "VLNOracleProgressSensor"
 
+# # DISTANCE_TO_GOAL MEASUREMENT
+# -----------------------------------------------------------------------------
+_C.TASK.DISTANCE_TO_GOAL = CN()
+_C.TASK.DISTANCE_TO_GOAL.TYPE = "DistanceToGoal"
+_C.TASK.DISTANCE_TO_GOAL.DISTANCE_TO = "POINT"
+
 # -----------------------------------------------------------------------------
 # NDTW MEASUREMENT
 # -----------------------------------------------------------------------------
@@ -37,9 +43,7 @@ _C.TASK.NDTW = Config()
 _C.TASK.NDTW.TYPE = "NDTW"
 _C.TASK.NDTW.SPLIT = "val_seen"
 _C.TASK.NDTW.FDTW = True  # False: DTW
-_C.TASK.NDTW.GT_PATH = (
-    "data/datasets/R2R_VLNCE_v1-1_preprocessed/{split}/{split}_gt.json"
-)
+_C.TASK.NDTW.GT_PATH = "data/datasets/R2R_VLNCE_v1_preprocessed/{split}/{split}_gt.json"
 _C.TASK.NDTW.SUCCESS_DISTANCE = 0.2
 # -----------------------------------------------------------------------------
 # SDTW MEASUREMENT
@@ -48,9 +52,7 @@ _C.TASK.SDTW = Config()
 _C.TASK.SDTW.TYPE = "SDTW"
 _C.TASK.SDTW.SPLIT = "val_seen"
 _C.TASK.SDTW.FDTW = True  # False: DTW
-_C.TASK.SDTW.GT_PATH = (
-    "data/datasets/R2R_VLNCE_v1-1_preprocessed/{split}/{split}_gt.json"
-)
+_C.TASK.SDTW.GT_PATH = "data/datasets/R2R_VLNCE_v1_preprocessed/{split}/{split}_gt.json"
 _C.TASK.SDTW.SUCCESS_DISTANCE = 0.2
 # -----------------------------------------------------------------------------
 # PATH_LENGTH MEASUREMENT

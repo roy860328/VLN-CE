@@ -638,7 +638,7 @@ class DaggerTrainer(BaseRLTrainer):
                     collate_fn=collate_fn,
                     pin_memory=False,
                     drop_last=True,  # drop last batch if smaller
-                    num_workers=3,
+                    num_workers=0,
                 )
 
                 AuxLosses.activate()
@@ -646,6 +646,8 @@ class DaggerTrainer(BaseRLTrainer):
                     for batch in tqdm.tqdm(
                         diter, total=dataset.length // dataset.batch_size, leave=False
                     ):
+                        print(len(batch))
+                        raise
                         (
                             observations_batch,
                             prev_actions_batch,
@@ -657,6 +659,8 @@ class DaggerTrainer(BaseRLTrainer):
                             k: v.to(device=self.device, non_blocking=True)
                             for k, v in observations_batch.items()
                         }
+                        print(observations_batch.keys())
+                        print(observations_batch["instruction"][0])
 
                         try:
                             loss, action_loss, aux_loss = self._update_agent(
@@ -872,10 +876,7 @@ class DaggerTrainer(BaseRLTrainer):
                         images=rgb_frames[i],
                         episode_id=current_episodes[i].episode_id,
                         checkpoint_idx=checkpoint_index,
-                        metric_name="SPL",
-                        metric_value=round(
-                            stats_episodes[current_episodes[i].episode_id]["spl"], 6
-                        ),
+                        metrics={"SPL": round(stats_episodes[current_episodes[i].episode_id]["spl"], 6)},
                         tb_writer=writer,
                     )
 

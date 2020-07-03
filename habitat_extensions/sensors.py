@@ -66,7 +66,7 @@ class VLNOracleActionSensor(Sensor):
             goal_radius=getattr(config, "GOAL_RADIUS", 0.5),
             return_one_hot=False,
         )
-        self.follower.mode = "geodesic_path"
+        self.follower.mode = "exact_gradient"
 
     def _get_uuid(self, *args: Any, **kwargs: Any):
         return "vln_oracle_action_sensor"
