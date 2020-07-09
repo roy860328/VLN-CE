@@ -14,9 +14,9 @@ EVAL:
   EPISODE_COUNT: 50000
 
 DAGGER:
-  ITERATIONS: 10
+  ITERATIONS: 100
   EPOCHS: 4
-  UPDATE_SIZE: 2000
+  UPDATE_SIZE: 200
   BATCH_SIZE: 5
   P: 0.75
   LMDB_FEATURES_DIR: data/trajectories_dirs/cma_pm_da/trajectories.lmdb

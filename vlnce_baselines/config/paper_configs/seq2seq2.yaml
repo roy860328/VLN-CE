@@ -4,9 +4,9 @@ TORCH_GPU_ID: 0
 NUM_PROCESSES: 1
 VIDEO_OPTION: ["disk", "tensorboard"]
 VIDEO_DIR: "video_dir"
-TENSORBOARD_DIR: data/tensorboard_dirs/seq2seq
-CHECKPOINT_FOLDER: data/checkpoints/seq2seq
-EVAL_CKPT_PATH_DIR: data/checkpoints/seq2seq
+TENSORBOARD_DIR: data/tensorboard_dirs/seq2seq2
+CHECKPOINT_FOLDER: data/checkpoints/seq2seq2
+EVAL_CKPT_PATH_DIR: data/checkpoints/seq2seq2
 
 EVAL:
   USE_CKPT_CONFIG: False
@@ -16,8 +16,12 @@ EVAL:
 DAGGER:
   ITERATIONS: 10000
   EPOCHS: 2
-  UPDATE_SIZE: 10
+  UPDATE_SIZE: 1
   BATCH_SIZE: 5
   P: 1.0
   PRELOAD_LMDB_FEATURES: False
-  LMDB_FEATURES_DIR: data/trajectories_dirs/seq2seq/trajectories.lmdb
+  LMDB_FEATURES_DIR: data/trajectories_dirs/seq2seq2/trajectories.lmdb
+
+MODEL:
+  seq2seq2:
+    use: True

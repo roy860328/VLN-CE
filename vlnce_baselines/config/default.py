@@ -80,7 +80,7 @@ _C.MODEL.INSTRUCTION_ENCODER.dataset_vocab = (
 )
 _C.MODEL.INSTRUCTION_ENCODER.fine_tune_embeddings = False
 _C.MODEL.INSTRUCTION_ENCODER.embedding_size = 50
-_C.MODEL.INSTRUCTION_ENCODER.hidden_size = 128
+_C.MODEL.INSTRUCTION_ENCODER.hidden_size = 768
 _C.MODEL.INSTRUCTION_ENCODER.rnn_type = "LSTM"
 _C.MODEL.INSTRUCTION_ENCODER.final_state_only = True
 _C.MODEL.INSTRUCTION_ENCODER.bidirectional = False
@@ -116,6 +116,8 @@ _C.MODEL.PROGRESS_MONITOR = CN()
 _C.MODEL.PROGRESS_MONITOR.use = False
 _C.MODEL.PROGRESS_MONITOR.alpha = 1.0  # loss multiplier
 
+_C.MODEL.seq2seq2 = CN()
+_C.MODEL.seq2seq2.use = False
 
 def get_config(
     config_paths: Optional[Union[List[str], str]] = None, opts: Optional[list] = None

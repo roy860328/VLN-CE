@@ -31,6 +31,7 @@ from vlnce_baselines.common.env_utils import (
 from vlnce_baselines.common.utils import transform_obs
 from vlnce_baselines.models.cma_policy import CMAPolicy
 from vlnce_baselines.models.seq2seq_policy import Seq2SeqPolicy
+from vlnce_baselines.models.seq2seq_policy2 import Seq2SeqPolicy2
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -132,7 +133,8 @@ class IWTrajectoryDataset(torch.utils.data.IterableDataset):
         super().__init__()
         self.lmdb_features_dir = lmdb_features_dir
         self.lmdb_map_size = lmdb_map_size
-        self.preload_size = batch_size * 100
+        self.preload_size = batch_size * 1
+        self.preload_size = 1
         self._preload = []
         self.batch_size = batch_size
 
@@ -166,6 +168,7 @@ class IWTrajectoryDataset(torch.utils.data.IterableDataset):
                     if len(self.load_ordering) == 0:
                         break
 
+                    print(self.load_ordering.pop())
                     new_preload.append(
                         msgpack_numpy.unpackb(
                             txn.get(str(self.load_ordering.pop()).encode()), raw=False
@@ -253,6 +256,12 @@ class DaggerTrainer(BaseRLTrainer):
 
         if config.CMA.use:
             self.actor_critic = CMAPolicy(
+                observation_space=self.envs.observation_spaces[0],
+                action_space=self.envs.action_spaces[0],
+                model_config=config,
+            )
+        elif config.seq2seq2.use:
+            self.actor_critic = Seq2SeqPolicy2(
                 observation_space=self.envs.observation_spaces[0],
                 action_space=self.envs.action_spaces[0],
                 model_config=config,
@@ -446,6 +455,9 @@ class DaggerTrainer(BaseRLTrainer):
                     not_done_masks,
                     deterministic=False,
                 )
+                # print("action: ", actions)
+                # print("batch[vln_oracle_action_sensor]: ", batch["vln_oracle_action_sensor"])
+                # print("torch.rand_like(actions, dtype=torch.float) < beta: ", torch.rand_like(actions, dtype=torch.float) < beta)
                 actions = torch.where(
                     torch.rand_like(actions, dtype=torch.float) < beta,
                     batch["vln_oracle_action_sensor"].long(),
@@ -631,23 +643,21 @@ class DaggerTrainer(BaseRLTrainer):
                     lmdb_map_size=self.config.DAGGER.LMDB_MAP_SIZE,
                     batch_size=self.config.DAGGER.BATCH_SIZE,
                 )
-                diter = torch.utils.data.DataLoader(
-                    dataset,
-                    batch_size=self.config.DAGGER.BATCH_SIZE,
-                    shuffle=False,
-                    collate_fn=collate_fn,
-                    pin_memory=False,
-                    drop_last=True,  # drop last batch if smaller
-                    num_workers=0,
-                )
 
                 AuxLosses.activate()
                 for epoch in tqdm.trange(self.config.DAGGER.EPOCHS):
+                    diter = torch.utils.data.DataLoader(
+                        dataset,
+                        batch_size=self.config.DAGGER.BATCH_SIZE,
+                        shuffle=False,
+                        collate_fn=collate_fn,
+                        pin_memory=False,
+                        drop_last=True,  # drop last batch if smaller
+                        num_workers=0,
+                    )
                     for batch in tqdm.tqdm(
                         diter, total=dataset.length // dataset.batch_size, leave=False
                     ):
-                        print(len(batch))
-                        raise
                         (
                             observations_batch,
                             prev_actions_batch,
@@ -659,9 +669,6 @@ class DaggerTrainer(BaseRLTrainer):
                             k: v.to(device=self.device, non_blocking=True)
                             for k, v in observations_batch.items()
                         }
-                        print(observations_batch.keys())
-                        print(observations_batch["instruction"][0])
-
                         try:
                             loss, action_loss, aux_loss = self._update_agent(
                                 observations_batch,
@@ -842,6 +849,7 @@ class DaggerTrainer(BaseRLTrainer):
                     not_done_masks,
                     deterministic=True,
                 )
+                # actions = batch["vln_oracle_action_sensor"].long()
                 prev_actions.copy_(actions)
 
             outputs = self.envs.step([a[0].item() for a in actions])

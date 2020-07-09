@@ -6,7 +6,7 @@ import torch.nn as nn
 from habitat import Config, logger
 
 
-class InstructionEncoder(nn.Module):
+class InstructionEncoder2(nn.Module):
     def __init__(self, config: Config):
         r"""An encoder that uses RNN to encode an instruction. Returns
         the final hidden state after processing the instruction sequence.

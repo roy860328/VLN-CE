@@ -9,7 +9,7 @@ from habitat_baselines.rl.models.rnn_state_encoder import RNNStateEncoder
 from habitat_baselines.rl.ppo.policy import Net
 
 from vlnce_baselines.common.aux_losses import AuxLosses
-from vlnce_baselines.models.encoders.instruction_encoder import InstructionEncoder
+from vlnce_baselines.models.encoders.instruction_encoder2 import InstructionEncoder2
 from vlnce_baselines.models.encoders.resnet_encoders import (
     TorchVisionResNet50,
     VlnResnetDepthEncoder,
@@ -17,8 +17,9 @@ from vlnce_baselines.models.encoders.resnet_encoders import (
 from vlnce_baselines.models.encoders.simple_cnns import SimpleDepthCNN, SimpleRGBCNN
 from vlnce_baselines.models.policy import BasePolicy
 
+from pytorch_pretrained_bert import BertModel, BertConfig, BertTokenizer
 
-class Seq2SeqPolicy(BasePolicy):
+class Seq2SeqPolicy2(BasePolicy):
     def __init__(
         self, observation_space: Space, action_space: Space, model_config: Config
     ):
@@ -48,7 +49,7 @@ class Seq2SeqNet(Net):
         self.model_config = model_config
 
         # Init the instruction encoder
-        self.instruction_encoder = InstructionEncoder(model_config.INSTRUCTION_ENCODER)
+        self.instruction_encoder = InstructionEncoder2(model_config.INSTRUCTION_ENCODER)
 
         # Init the depth encoder
         assert model_config.DEPTH_ENCODER.cnn_type in [
@@ -113,6 +114,35 @@ class Seq2SeqNet(Net):
 
         self._init_layers()
 
+        # bert
+        # import gzip
+        # with gzip.open(model_config.INSTRUCTION_ENCODER.embedding_file, "rt") as f:
+        #     import json
+        #     embeddings = torch.tensor(json.load(f))
+        # if model_config.INSTRUCTION_ENCODER.use_pretrained_embeddings:
+        #     self.embedding_layer = nn.Embedding.from_pretrained(
+        #         embeddings=embeddings,
+        #         freeze=not model_config.INSTRUCTION_ENCODER.fine_tune_embeddings,
+        #     )
+        # else:  # each embedding initialized to sampled Gaussian
+        #     self.embedding_layer = nn.Embedding(
+        #         num_embeddings=model_config.INSTRUCTION_ENCODER.vocab_size,
+        #         embedding_dim=model_config.INSTRUCTION_ENCODER.embedding_size,
+        #         padding_idx=0,
+        #     )
+
+        # configuration = BertConfig(hidden_size=model_config.INSTRUCTION_ENCODER.hidden_size,
+        #                            vocab_size_or_config_json_file=model_config.INSTRUCTION_ENCODER.vocab_size,
+        #                            num_attention_heads=8,
+        #                            )
+        # self.bert = BertModel(configuration)
+        import json
+        with open("index_to_word.json") as f:
+            self.idx_to_word = list(json.load(f)["word"].keys())
+            print(self.idx_to_word)
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.bert = BertModel.from_pretrained('bert-base-uncased')
+
         self.train()
 
     @property
@@ -131,13 +161,25 @@ class Seq2SeqNet(Net):
         nn.init.kaiming_normal_(self.progress_monitor.weight, nonlinearity="tanh")
         nn.init.constant_(self.progress_monitor.bias, 0)
 
+    def _get_bert_embedding(self, observations):
+        instruction = observations["instruction"].int()[0]
+        # embedded = self.embedding_layer(instruction)
+        token = list(map(lambda ind: self.idx_to_word[ind], instruction))
+        indexed_tokens = self.tokenizer.convert_tokens_to_ids(token)
+        tokens_tensor = torch.tensor([indexed_tokens])
+        encoded_layers, _ = self.bert(tokens_tensor)
+        return encoded_layers[11]
+
     def forward(self, observations, rnn_hidden_states, prev_actions, masks):
         r"""
         instruction_embedding: [batch_size x INSTRUCTION_ENCODER.output_size]
         depth_embedding: [batch_size x DEPTH_ENCODER.output_size]
         rgb_embedding: [batch_size x RGB_ENCODER.output_size]
         """
-        instruction_embedding = self.instruction_encoder(observations)
+        ### instruction
+        # instruction_embedding = self.instruction_encoder(observations)
+        instruction_embedding = self._get_bert_embedding(observations)
+
         depth_embedding = self.depth_encoder(observations)
         rgb_embedding = self.rgb_encoder(observations)
         # print("depth_embedding: ", depth_embedding)
